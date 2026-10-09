@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+:root {
+  --background: #090d16;
+  --foreground: #f1f5f9;
+}
+
+body {
+  background-color: #090d16;
+  color: #f1f5f9;
+  min-height: 100vh;
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #090d16;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
