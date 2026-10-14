@@ -13,10 +13,15 @@ import { generateEmbedding } from "@/lib/ollama";
  */
 export async function GET() {
   try {
-    // Step 1: Ensure collection exists in Qdrant
+    const isHF = (process.env.EMBEDDING_PROVIDER || "huggingface").toLowerCase() === "huggingface";
+    const vectorDimensions = isHF
+      ? parseInt(process.env.HF_EMBEDDING_DIMENSIONS || "384", 10)
+      : 768;
+
+    // Step 1: Ensure collection exists in Qdrant with matching dimensions
     const collectionStatus = await ensureCollection({
       collectionName: KNOWLEDGE_BASE_COLLECTION,
-      vectorSize: 768, // Matches nomic-embed-text dimension
+      vectorSize: vectorDimensions,
       distance: "Cosine",
     });
 

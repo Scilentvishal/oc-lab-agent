@@ -124,7 +124,7 @@ export async function POST(req) {
         documentsIngested: documentsToIngest.length,
         totalChunksCreated: chunks.length,
         qdrantPointsCount: collectionInfo.points_count,
-        embeddingDimensions: 768,
+        embeddingDimensions: vectorDimensions,
         totalDurationMs: durationMs,
       },
       documentBreakdown: documentsToIngest.map((d) => ({
