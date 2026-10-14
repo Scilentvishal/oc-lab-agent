@@ -59,7 +59,7 @@ export async function GET(req) {
         status: "error",
         query,
         error: error.message,
-        suggestion: "Ensure Qdrant is running and documents are ingested via POST /api/ingest",
+        cause: error.cause ? error.cause.message || String(error.cause) : null,
       },
       { status: 500 }
     );

@@ -141,6 +141,7 @@ export async function POST(req) {
         status: "error",
         message: "Ingestion pipeline failed",
         error: error.message,
+        cause: error.cause ? error.cause.message || String(error.cause) : null,
       },
       { status: 500 }
     );
