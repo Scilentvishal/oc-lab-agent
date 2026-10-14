@@ -35,59 +35,33 @@ export async function GET(req) {
       limit,
     });
 
-    if (matches && matches.length > 0) {
-      const durationMs = Date.now() - startTime;
-      return NextResponse.json({
-        status: "success",
-        query,
-        source: "Qdrant Vector Database",
-        resultsCount: matches.length,
-        durationMs,
-        results: matches.map((m) => ({
-          similarityScore: Math.round(m.score * 1000) / 1000,
-          documentId: m.payload.documentId,
-          title: m.payload.documentTitle,
-          documentType: m.payload.documentType,
-          sectionTitle: m.payload.sectionTitle,
-          version: m.payload.version,
-          excerpt: m.payload.text,
-        })),
-      });
-    }
-  } catch (error) {
-    // When Qdrant/Ollama is offline on cloud Vercel, fall through to in-memory search
-  }
+    const durationMs = Date.now() - startTime;
 
-  // CLOUD FALLBACK: In-memory search over pharmaCorpus
-  const { pharmaCorpus } = await import("@/lib/pharma-corpus");
-  const terms = query.toLowerCase().split(/\s+/).filter((t) => t.length > 2);
-  const scored = pharmaCorpus.map((doc) => {
-    let score = 0;
-    const text = (doc.title + " " + doc.content).toLowerCase();
-    terms.forEach((term) => {
-      if (text.includes(term)) score += 1;
+    return NextResponse.json({
+      status: "success",
+      query,
+      source: "Qdrant Vector Database",
+      resultsCount: matches.length,
+      durationMs,
+      results: matches.map((m) => ({
+        similarityScore: Math.round(m.score * 1000) / 1000,
+        documentId: m.payload.documentId,
+        title: m.payload.documentTitle,
+        documentType: m.payload.documentType,
+        sectionTitle: m.payload.sectionTitle,
+        version: m.payload.version,
+        excerpt: m.payload.text,
+      })),
     });
-    return { doc, score };
-  });
-
-  scored.sort((a, b) => b.score - a.score);
-  const topDocs = scored.slice(0, limit);
-  const durationMs = Date.now() - startTime;
-
-  return NextResponse.json({
-    status: "success",
-    query,
-    source: "In-Memory Regulatory Knowledge Base (Cloud Fallback)",
-    resultsCount: topDocs.length,
-    durationMs,
-    results: topDocs.map((s) => ({
-      similarityScore: Math.min(0.96, Math.max(0.72, 0.75 + s.score * 0.05)),
-      documentId: s.doc.documentId,
-      title: s.doc.title,
-      documentType: s.doc.documentType,
-      sectionTitle: "Standard Operating Procedure & Specifications",
-      version: s.doc.version,
-      excerpt: s.doc.content.substring(0, 450) + "...",
-    })),
-  });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        status: "error",
+        query,
+        error: error.message,
+        suggestion: "Ensure Qdrant is running and documents are ingested via POST /api/ingest",
+      },
+      { status: 500 }
+    );
+  }
 }
