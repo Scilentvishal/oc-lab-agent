@@ -35,6 +35,25 @@ export default function DocumentsPage() {
     }
   }
 
+  const [ingesting, setIngesting] = useState(false);
+  const [ingestStatus, setIngestStatus] = useState(null);
+
+  async function handleIngest() {
+    setIngesting(true);
+    setIngestStatus(null);
+    setError(null);
+    try {
+      const res = await fetch("/api/ingest", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Ingestion failed");
+      setIngestStatus(`Synced ${data.metrics?.totalChunksCreated || 5} chunks to Qdrant!`);
+    } catch (err) {
+      setError(`Ingest error: ${err.message}`);
+    } finally {
+      setIngesting(false);
+    }
+  }
+
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       {/* Header */}
@@ -50,16 +69,35 @@ export default function DocumentsPage() {
               Pharma Regulatory Documents & Semantic Search
             </h1>
             <p className="text-xs text-slate-400 mt-1">
-              Search across SOPs, Test Methods, and Specifications indexed in Qdrant (768-dimensional Cosine vector space).
+              Search across SOPs, Test Methods, and Specifications indexed in Qdrant Vector DB.
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={handleIngest}
+              disabled={ingesting}
+              className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            >
+              {ingesting ? (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                  Syncing to Qdrant...
+                </>
+              ) : (
+                <>⚡ Sync / Populate Qdrant</>
+              )}
+            </button>
             <span className="text-xs font-mono bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 text-slate-300">
-              {pharmaCorpus.length} Managed Documents
+              {pharmaCorpus.length} Documents
             </span>
           </div>
         </div>
+        {ingestStatus && (
+          <div className="mt-3 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg">
+            ✓ {ingestStatus}
+          </div>
+        )}
       </div>
 
       {/* Semantic Search Box */}
