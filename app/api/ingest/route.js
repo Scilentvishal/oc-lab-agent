@@ -52,10 +52,16 @@ export async function POST(req) {
   const startTime = Date.now();
 
   try {
-    // 1. Ensure collection exists
+    // Determine vector dimension based on active provider
+    const isHF = (process.env.EMBEDDING_PROVIDER || "huggingface").toLowerCase() === "huggingface";
+    const vectorDimensions = isHF
+      ? parseInt(process.env.HF_EMBEDDING_DIMENSIONS || "384", 10)
+      : 768;
+
+    // 1. Ensure collection exists with appropriate dimensions
     await ensureCollection({
       collectionName: KNOWLEDGE_BASE_COLLECTION,
-      vectorSize: 768,
+      vectorSize: vectorDimensions,
       distance: "Cosine",
     });
 
