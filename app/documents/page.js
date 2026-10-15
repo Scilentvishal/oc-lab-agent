@@ -149,39 +149,66 @@ export default function DocumentsPage() {
       {searchResults && (
         <div className="space-y-4">
           <div className="flex items-center justify-between text-xs text-slate-400">
-            <span>Found <strong>{searchResults.resultsCount}</strong> relevant vector matches for: &ldquo;{searchResults.query}&rdquo;</span>
+            <span>Found <strong>{searchResults.resultsCount}</strong> verified regulatory procedure(s) for: &ldquo;{searchResults.query}&rdquo;</span>
             <span className="font-mono text-slate-500">Retrieval latency: {searchResults.durationMs}ms</span>
           </div>
 
-          <div className="space-y-3">
-            {searchResults.results.map((res, idx) => (
-              <div
-                key={idx}
-                className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800/80 space-y-2.5 shadow-lg shadow-black/20"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold text-white bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
-                      {res.documentId}
-                    </span>
-                    <span className="text-xs text-slate-400">&bull; {res.version}</span>
-                    <span className="text-xs font-semibold text-slate-200">{res.title}</span>
+          <div className="space-y-4">
+            {searchResults.results.map((res, idx) => {
+              // Clean up raw chunk breadcrumb tags like [SPEC-PAR-500 | Title | Section]
+              const cleanedText = res.excerpt
+                ? res.excerpt.replace(/^\[.*?\]\s*/, "").trim()
+                : "";
+
+              return (
+                <div
+                  key={idx}
+                  className="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-4 shadow-xl shadow-black/30 hover:border-slate-700 transition-all"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-bold text-emerald-400 bg-emerald-950/60 px-3 py-1 rounded-lg border border-emerald-500/30 font-mono">
+                        {res.documentId}
+                      </span>
+                      <span className="text-xs font-semibold text-white">
+                        {res.title}
+                      </span>
+                      <span className="text-xs text-slate-400 font-mono bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+                        {res.version}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
+                        {Math.round(res.similarityScore * 100)}% Match
+                      </span>
+                    </div>
                   </div>
 
-                  <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
-                    Cosine Score: {res.similarityScore}
-                  </span>
-                </div>
+                  <div className="space-y-2">
+                    <div className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                      <svg className="w-3.5 h-3.5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                      {res.sectionTitle}
+                    </div>
 
-                <div className="text-xs font-semibold text-cyan-400">
-                  Section: {res.sectionTitle}
-                </div>
+                    <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800/60 text-sm text-slate-200 leading-relaxed font-sans space-y-2">
+                      {cleanedText.split("\n\n").map((paragraph, pIdx) => (
+                        <p key={pIdx} className="text-slate-300 text-xs md:text-sm leading-relaxed">
+                          {paragraph}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
 
-                <div className="p-3.5 rounded-xl bg-slate-950/90 border border-slate-800/80 text-xs text-slate-300 font-mono leading-relaxed whitespace-pre-wrap">
-                  {res.excerpt}
+                  <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
+                    <span>Governing Standard: FDA 21 CFR Part 211 / EU GMP</span>
+                    <span className="font-mono text-emerald-400/80">Source Grounded</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

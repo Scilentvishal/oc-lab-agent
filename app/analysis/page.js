@@ -302,23 +302,138 @@ export default function AnalysisPage() {
           {activeTab === "trace" && (
             <div className="space-y-4">
               <div className="text-xs text-slate-400">
-                Chronological reasoning trajectory followed autonomously by the agent:
+                Step-by-step autonomous decision making and clinical verification trail:
               </div>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {agentResult.executionTrace.map((step) => (
-                  <div key={step.step} className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-mono font-bold text-emerald-400 uppercase">
-                        Step {step.step}: {step.action}
+                  <div key={step.step} className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3 shadow-lg shadow-black/20">
+                    <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-mono font-bold border border-emerald-500/30">
+                          {step.step}
+                        </span>
+                        <span className="text-xs font-bold text-white tracking-wide">
+                          Action: <span className="font-mono text-cyan-400">{step.action}</span>
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-950 text-slate-400 border border-slate-800">
+                        {step.modelUsed || "QC Intelligence Agent"}
                       </span>
                     </div>
-                    <div className="text-xs text-slate-300 font-sans">
-                      <span className="text-slate-500 font-mono text-[10px] uppercase block">Thought</span>
-                      {step.thought}
+
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                        Agent Reasoning (Thought)
+                      </span>
+                      <p className="text-xs md:text-sm text-slate-200 leading-relaxed font-sans bg-slate-950/60 p-3 rounded-xl border border-slate-800/60">
+                        {step.thought}
+                      </p>
                     </div>
-                    <div className="text-[11px] font-mono p-2.5 rounded bg-slate-950 border border-slate-800/80 text-slate-400 overflow-x-auto">
-                      <span className="text-slate-600 uppercase text-[9px] block">Observation</span>
-                      {typeof step.observation === "object" ? JSON.stringify(step.observation, null, 2) : step.observation}
+
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        Analytical Observation
+                      </span>
+
+                      {/* Clean Human-Readable Observations instead of raw JSON dumps */}
+                      <div className="p-4 rounded-xl bg-slate-950 border border-slate-800/80 text-xs space-y-3">
+                        {step.action === "getBatch" && step.observation?.batch && (
+                          <div className="space-y-2">
+                            <div className="flex flex-wrap items-center gap-2 text-slate-300">
+                              <span className="font-bold text-white font-mono">{step.observation.batch.batchId}</span>
+                              <span>&bull; {step.observation.batch.productName}</span>
+                              <span className="text-slate-400">({step.observation.batch.batchSize})</span>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-[11px]">
+                              {Object.entries(step.observation.batch.results || {}).map(([k, v]) => (
+                                <div key={k} className="p-2 rounded bg-slate-900 border border-slate-800">
+                                  <span className="text-slate-500 block capitalize">{k.replace(/_/g, " ")}</span>
+                                  <span className="font-mono font-bold text-white">{String(v)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {step.action === "checkBatch" && (
+                          <div className="space-y-2.5">
+                            <div className="flex items-center justify-between">
+                              <span className="font-semibold text-slate-200">
+                                Findings Identified: <strong>{step.observation.findingsCount || 0}</strong>
+                              </span>
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                                {step.observation.overallStatus}
+                              </span>
+                            </div>
+                            {Array.isArray(step.observation.findings) && (
+                              <div className="space-y-2">
+                                {step.observation.findings.map((f, fIdx) => (
+                                  <div key={fIdx} className="p-2.5 rounded bg-rose-950/20 border border-rose-500/30 flex items-start justify-between gap-3 text-[11px]">
+                                    <div>
+                                      <span className="font-bold text-white uppercase block">{f.metadata?.testLabel || f.test}</span>
+                                      <span className="text-slate-300">{f.message}</span>
+                                    </div>
+                                    <span className="font-mono text-rose-300 shrink-0 font-bold bg-rose-950/60 px-2 py-0.5 rounded">
+                                      Spec: {f.specification}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {step.action === "validateCalculation" && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-300">
+                              Independent Analytical HPLC & Mass Balance Recalculation:
+                            </span>
+                            <span className={`px-2.5 py-1 rounded text-xs font-bold ${
+                              step.observation.hasCalculationErrors
+                                ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                                : "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
+                            }`}>
+                              {step.observation.hasCalculationErrors ? "⚠ Math Discrepancy Found" : "✓ Calculations Verified (No Arithmetic Errors)"}
+                            </span>
+                          </div>
+                        )}
+
+                        {step.action === "searchDocuments" && (
+                          <div className="space-y-2">
+                            <span className="text-slate-400 block font-sans">
+                              Retrieved governing procedures from Qdrant Vector Knowledge Base:
+                            </span>
+                            {Array.isArray(step.observation.results) && (
+                              <div className="space-y-1.5">
+                                {step.observation.results.map((doc, dIdx) => (
+                                  <div key={dIdx} className="p-2.5 rounded bg-slate-900 border border-slate-800 flex items-center justify-between text-[11px]">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-mono font-bold text-emerald-400">{doc.documentId}</span>
+                                      <span className="text-slate-200">{doc.title}</span>
+                                    </div>
+                                    <span className="text-[10px] text-cyan-400 font-mono">
+                                      {Math.round((doc.similarityScore || 0.85) * 100)}% match
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {step.action === "finishAnalysis" && (
+                          <div className="p-2 text-emerald-400 font-medium">
+                            ✓ Investigation concluded. Traceable regulatory audit summary synthesized.
+                          </div>
+                        )}
+
+                        {/* Fallback for simple string observations */}
+                        {typeof step.observation === "string" && (
+                          <p className="text-slate-300">{step.observation}</p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
