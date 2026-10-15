@@ -43,7 +43,7 @@ export async function GET() {
 /**
  * POST /api/ingest
  * Executes the complete Pharma document ingestion pipeline:
- * 1. Ensures Qdrant collection exists (768-dim, Cosine)
+ * 1. Ensures Qdrant collection exists (384-dim, Cosine)
  * 2. Parses and chunks SOPs, Specs, and Test Methods with contextual breadcrumbs
  * 3. Computes vector embeddings via local Ollama (nomic-embed-text)
  * 4. Batch upserts all points and payloads into Qdrant
@@ -56,7 +56,7 @@ export async function POST(req) {
     const isHF = (process.env.EMBEDDING_PROVIDER || "huggingface").toLowerCase() === "huggingface";
     const vectorDimensions = isHF
       ? parseInt(process.env.HF_EMBEDDING_DIMENSIONS || "384", 10)
-      : 768;
+      : 384;
 
     // 1. Ensure collection exists with appropriate dimensions
     await ensureCollection({
