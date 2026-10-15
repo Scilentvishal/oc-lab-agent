@@ -52,11 +52,11 @@ export async function POST(req) {
   const startTime = Date.now();
 
   try {
-    // Determine vector dimension based on active provider
-    const isHF = (process.env.EMBEDDING_PROVIDER || "huggingface").toLowerCase() === "huggingface";
-    const vectorDimensions = isHF
-      ? parseInt(process.env.HF_EMBEDDING_DIMENSIONS || "384", 10)
-      : 384;
+    // Read vector dimensions dynamically from environment variable (default: 768)
+    const vectorDimensions = parseInt(
+      process.env.GEMINI_EMBED_DIMENSIONS || process.env.VECTOR_DIMENSIONS || "768",
+      10
+    );
 
     // 1. Ensure collection exists with appropriate dimensions
     await ensureCollection({
