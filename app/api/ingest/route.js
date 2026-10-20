@@ -8,6 +8,7 @@ import {
   getCollectionInfo,
   KNOWLEDGE_BASE_COLLECTION,
 } from "@/lib/qdrant";
+import { validateIngestionDocuments } from "@/lib/validations";
 
 /**
  * GET /api/ingest
@@ -76,8 +77,19 @@ export async function POST(req) {
       // No JSON body passed; use default pharmaCorpus
     }
 
-    // 3. Chunk all documents
-    const chunks = chunkAllDocuments(documentsToIngest);
+    const validation = validateIngestionDocuments(documentsToIngest);
+    if (!validation.isValid) {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "Uploaded documents failed validation. No embeddings were generated.",
+          errors: validation.errors,
+        },
+        { status: 400 }
+      );
+    }
+    // 3. Chunk only validated documents
+    const chunks = chunkAllDocuments(validation.validDocuments);
 
     // 4. Generate embeddings in parallel batches for speed
     const BATCH_SIZE = 5;
